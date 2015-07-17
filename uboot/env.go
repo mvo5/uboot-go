@@ -34,6 +34,25 @@ func writeUint32(u uint32) []byte {
 	return buf.Bytes()
 }
 
+func CreateEnv(fname string, size int) (*Env, error) {
+	f, err := os.Create(fname)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	content := make([]byte, size)
+	env := &Env{
+		fname: fname,
+		crc:   crc32.ChecksumIEEE(content[headerSize:]),
+		flags: content[4],
+		data:  content[headerSize:],
+	}
+
+	return env, nil
+
+}
+
 func NewEnv(fname string) (*Env, error) {
 	f, err := os.Open(fname)
 	if err != nil {
@@ -67,7 +86,7 @@ func (env *Env) String() string {
 		if len(envStr) == 0 || envStr[0] == 0 || envStr[0] == 255 {
 			continue
 		}
-		out += string(envStr)+"\n"
+		out += string(envStr) + "\n"
 	}
 
 	return out
@@ -81,7 +100,7 @@ func (env *Env) Set(name, value string) error {
 			continue
 		}
 		// remove str we want to rewrite
-		if strings.HasPrefix(string(envStr), fmt.Sprintf("%s=", value)) {
+		if strings.HasPrefix(string(envStr), fmt.Sprintf("%s=", name)) {
 			continue
 		}
 		envStrs = append(envStrs, string(envStr))
@@ -107,6 +126,9 @@ func (env *Env) Set(name, value string) error {
 }
 
 func (env *Env) Write() error {
+	// FIXME: need to open so that we keep the file intact,
+	//        i.e. no truncate, we always override with the full
+	//        size anyway
 	f, err := os.Create(env.fname)
 	if err != nil {
 		return err
@@ -119,4 +141,3 @@ func (env *Env) Write() error {
 
 	return nil
 }
-
