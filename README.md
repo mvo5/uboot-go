@@ -22,7 +22,7 @@ func main() {
 }
 ```
 
-Example of the cmdline app:
+Example of the cmdline app for existing files:
 ```
 $ uboot-env uboot.env print
 initrd_addr=0x88080000
@@ -42,7 +42,10 @@ initrd_addr=0x88080000
 uenvcmd=load mmc ${bootpart} ${loadaddr} snappy-system.txt; env import -t $loadaddr $filesize; run snappy_boot
 bootpart=0:1
 key=value
+```
 
+Example of the cmdline app for creating new env files:
+```
 $ uboot-env uboot.env create 4096
 $ uboot-env uboot.env set foo bar
 $ uboot-env uboot.env print
