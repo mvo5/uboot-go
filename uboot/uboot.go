@@ -14,7 +14,8 @@ import (
 //        he/she wants env with or without flags
 var headerSize = 5
 
-type EnvHeader struct {
+type Env struct {
+	fname string
 	crc   uint32
 	flags byte
 	data  []byte
@@ -27,7 +28,13 @@ func readUint32(data []byte) uint32 {
 	return ret
 }
 
-func ReadUbootEnv(fname string) (*EnvHeader, error) {
+func writeUint32(u uint32) []byte {
+	buf := bytes.NewBuffer(nil)
+	binary.Write(buf, binary.LittleEndian, &u)
+	return buf.Bytes()
+}
+
+func NewEnv(fname string) (*Env, error) {
 	f, err := os.Open(fname)
 	if err != nil {
 		return nil, err
@@ -39,7 +46,8 @@ func ReadUbootEnv(fname string) (*EnvHeader, error) {
 		return nil, err
 	}
 
-	env := &EnvHeader{
+	env := &Env{
+		fname: fname,
 		crc:   readUint32(content),
 		flags: content[4],
 		data:  content[headerSize:],
@@ -53,18 +61,19 @@ func ReadUbootEnv(fname string) (*EnvHeader, error) {
 	return env, nil
 }
 
-func PrintEnv(env *EnvHeader) error {
+func (env *Env) String() string {
+	out := ""
 	for _, envStr := range bytes.Split(env.data, []byte{0}) {
 		if len(envStr) == 0 || envStr[0] == 0 || envStr[0] == 255 {
 			continue
 		}
-		fmt.Println(string(envStr))
+		out += string(envStr)+"\n"
 	}
 
-	return nil
+	return out
 }
 
-func SetEnv(env *EnvHeader, name, value string) error {
+func (env *Env) Set(name, value string) error {
 	envStrs := []string{}
 
 	for _, envStr := range bytes.Split(env.data, []byte{0}) {
@@ -97,14 +106,8 @@ func SetEnv(env *EnvHeader, name, value string) error {
 	return nil
 }
 
-func writeUint32(u uint32) []byte {
-	buf := bytes.NewBuffer(nil)
-	binary.Write(buf, binary.LittleEndian, &u)
-	return buf.Bytes()
-}
-
-func WriteUbootEnv(envFile string, env *EnvHeader) error {
-	f, err := os.Create(envFile)
+func (env *Env) Write() error {
+	f, err := os.Create(env.fname)
 	if err != nil {
 		return err
 	}
