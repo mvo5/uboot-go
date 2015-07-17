@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	env, _ := uboot.NewEnv(os.Args[1])
+	env, _ := uboot.OpenEnv(os.Args[1])
 	fmt.Print(env)
 	env.Set("foo", "bar")
 	fmt.Print(env)

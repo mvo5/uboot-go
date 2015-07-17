@@ -16,7 +16,7 @@ func main() {
 
 	switch cmd {
 	case "print":
-		env, err := uboot.NewEnv(envFile)
+		env, err := uboot.OpenEnv(envFile)
 		if err != nil {
 			log.Fatalf("readUbootEnv failed for %s: %s", envFile, err)
 		}
@@ -35,7 +35,7 @@ func main() {
 		}
 
 	case "set":
-		env, err := uboot.NewEnv(envFile)
+		env, err := uboot.OpenEnv(envFile)
 		if err != nil {
 			log.Fatalf("readUbootEnv failed for %s: %s", envFile, err)
 		}

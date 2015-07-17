@@ -14,6 +14,7 @@ import (
 //        he/she wants env with or without flags
 var headerSize = 5
 
+// Env contains the data of the uboot environment
 type Env struct {
 	fname string
 	crc   uint32
@@ -34,6 +35,7 @@ func writeUint32(u uint32) []byte {
 	return buf.Bytes()
 }
 
+// CreateEnv a new empty uboot env file with the given size
 func CreateEnv(fname string, size int) (*Env, error) {
 	f, err := os.Create(fname)
 	if err != nil {
@@ -53,7 +55,8 @@ func CreateEnv(fname string, size int) (*Env, error) {
 
 }
 
-func NewEnv(fname string) (*Env, error) {
+// OpenEnv opens a existing uboot env file
+func OpenEnv(fname string) (*Env, error) {
 	f, err := os.Open(fname)
 	if err != nil {
 		return nil, err
@@ -92,6 +95,8 @@ func (env *Env) String() string {
 	return out
 }
 
+// Set sets a environment name to the given value, if the value is empty
+// the variable will be removed from the environment
 func (env *Env) Set(name, value string) error {
 	envStrs := []string{}
 
@@ -125,6 +130,7 @@ func (env *Env) Set(name, value string) error {
 	return nil
 }
 
+// Write will write out the environment data
 func (env *Env) Write() error {
 	// FIXME: need to open so that we keep the file intact,
 	//        i.e. no truncate, we always override with the full
