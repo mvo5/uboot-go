@@ -130,12 +130,12 @@ func (env *Env) Set(name, value string) error {
 	return nil
 }
 
-// Write will write out the environment data
-func (env *Env) Write() error {
-	// FIXME: need to open so that we keep the file intact,
-	//        i.e. no truncate, we always override with the full
-	//        size anyway
-	f, err := os.Create(env.fname)
+// Save will write out the environment data
+func (env *Env) Save() error {
+	// the size of the env file never changes so we not truncate
+	// we also do not O_TRUNC to avoid reallocations on the FS
+	// to minimize risk of fs corruption
+	f, err := os.OpenFile(env.fname, os.O_WRONLY, 0666)
 	if err != nil {
 		return err
 	}

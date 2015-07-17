@@ -30,8 +30,8 @@ func main() {
 		if err != nil {
 			log.Fatalf("env.Create failed for %s: %s", envFile, err)
 		}
-		if err := env.Write(); err != nil {
-			log.Fatalf("env.Write failed: %s", err)
+		if err := env.Save(); err != nil {
+			log.Fatalf("env.Save failed: %s", err)
 		}
 
 	case "set":
@@ -44,8 +44,8 @@ func main() {
 		if err := env.Set(name, value); err != nil {
 			log.Fatalf("env.Set failed: %s", err)
 		}
-		if err := env.Write(); err != nil {
-			log.Fatalf("env.Write failed for %s: %s", envFile, err)
+		if err := env.Save(); err != nil {
+			log.Fatalf("env.Save failed for %s: %s", envFile, err)
 		}
 	default:
 		log.Fatalf("unknown command %s", cmd)

@@ -33,7 +33,7 @@ func (u *ubootTestSuite) TestOpenEnv(c *C) {
 	c.Assert(err, IsNil)
 	env.Set("foo", "bar")
 	c.Assert(env.String(), Equals, "foo=bar\n")
-	env.Write()
+	env.Save()
 
 	env2, err := OpenEnv(u.envFile)
 	c.Assert(err, IsNil)
