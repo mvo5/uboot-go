@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/mvo5/uboot-env/uboot"
+	"github.com/mvo5/uboot-go/uboot"
 )
 
 func main() {
