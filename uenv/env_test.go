@@ -2,6 +2,7 @@ package uenv
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 
 	. "gopkg.in/check.v1"
@@ -51,4 +52,23 @@ func (u *uenvTestSuite) TestGetNoSuchEntry(c *C) {
 	env, err := Create(u.envFile, 4096)
 	c.Assert(err, IsNil)
 	c.Assert(env.Get("no-such-entry"), Equals, "")
+}
+
+func (u *uenvTestSuite) TestImport(c *C) {
+	env, err := Create(u.envFile, 4096)
+	c.Assert(err, IsNil)
+
+	r := strings.NewReader("foo=bar\n#comment\n\nbaz=baz")
+	err = env.Import(r)
+	c.Assert(err, IsNil)
+	c.Assert(env.String(), Equals, "foo=bar\nbaz=baz\n")
+}
+
+func (u *uenvTestSuite) TestImportHasError(c *C) {
+	env, err := Create(u.envFile, 4096)
+	c.Assert(err, IsNil)
+
+	r := strings.NewReader("foxy")
+	err = env.Import(r)
+	c.Assert(err, ErrorMatches, "Invalid line: \"foxy\"")
 }

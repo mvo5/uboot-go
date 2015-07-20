@@ -1,10 +1,12 @@
 package uenv
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"fmt"
 	"hash/crc32"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -117,11 +119,13 @@ func (env *Env) Set(name, value string) {
 // Save will write out the environment data
 func (env *Env) Save() error {
 	w := bytes.NewBuffer(nil)
-	w.Grow(env.size)
+	w.Grow(env.size - headerSize)
 	for k, v := range env.data {
 		w.Write([]byte(fmt.Sprintf("%s=%s", k, v)))
 		w.Write([]byte{0})
 	}
+	// ensure buffer is exactly the size we need it to be
+	w.Write(make([]byte, env.size-headerSize-w.Len()))
 	crc := crc32.ChecksumIEEE(w.Bytes())
 
 	// the size of the env file never changes so we not truncate
@@ -138,6 +142,29 @@ func (env *Env) Save() error {
 	pad := make([]byte, headerSize-binary.Size(crc))
 	f.Write(pad)
 	f.Write(w.Bytes())
+
+	return nil
+}
+
+// Import is a helper that imports a given text file into the uboot env
+// (like the input file on mkenvimage)
+func (env *Env) Import(r io.Reader) error {
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "#") || len(line) == 0 {
+			continue
+		}
+		l := strings.SplitN(line, "=", 2)
+		if len(l) == 1 {
+			return fmt.Errorf("Invalid line: %q", line)
+		}
+		env.data[l[0]] = l[1]
+
+	}
+	if err := scanner.Err(); err != nil {
+		return err
+	}
 
 	return nil
 }
