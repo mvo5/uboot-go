@@ -10,7 +10,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/mvo5/uboot-env/uenv"
+	"github.com/mvo5/uboot-go/uenv"
 	"os"
 )
 
@@ -24,13 +24,13 @@ func main() {
 
 Example of the cmdline app for existing files:
 ```
-$ uboot-env uboot.env print
+$ uboot-go uboot.env print
 initrd_addr=0x88080000
 uenvcmd=load mmc ${bootpart} ${loadaddr} snappy-system.txt; env import -t $loadaddr $filesize; run snappy_boot
 bootpart=0:1
 
-$ uboot-env uboot.env set key value
-$ uboot-env uboot.env print
+$ uboot-go uboot.env set key value
+$ uboot-go uboot.env print
 initrd_addr=0x88080000
 uenvcmd=load mmc ${bootpart} ${loadaddr} snappy-system.txt; env import -t $loadaddr $filesize; run snappy_boot
 bootpart=0:1
@@ -46,9 +46,9 @@ key=value
 
 Example of the cmdline app for creating new env files:
 ```
-$ uboot-env uboot.env create 4096
-$ uboot-env uboot.env set foo bar
-$ uboot-env uboot.env print
+$ uboot-go uboot.env create 4096
+$ uboot-go uboot.env set foo bar
+$ uboot-go uboot.env print
 foo=bar
 ```
 
