@@ -23,6 +23,7 @@ type Env struct {
 	data  map[string]string
 }
 
+// little endian helpers
 func readUint32(data []byte) uint32 {
 	var ret uint32
 	buf := bytes.NewBuffer(data)
@@ -146,8 +147,9 @@ func (env *Env) Save() error {
 	return nil
 }
 
-// Import is a helper that imports a given text file into the uboot env
-// (like the input file on mkenvimage)
+// Import is a helper that imports a given text file that contains
+// "key=value" paris into the uboot env. Lines starting with ^# are
+// ignored (like the input file on mkenvimage)
 func (env *Env) Import(r io.Reader) error {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
