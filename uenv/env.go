@@ -17,9 +17,8 @@ var headerSize = 5
 // Env contains the data of the uboot environment
 type Env struct {
 	fname string
-	crc   uint32
-	flags byte
-	data  []byte
+	size  int
+	data  map[string]string
 }
 
 func readUint32(data []byte) uint32 {
@@ -43,16 +42,13 @@ func Create(fname string, size int) (*Env, error) {
 	}
 	defer f.Close()
 
-	content := make([]byte, size)
 	env := &Env{
 		fname: fname,
-		crc:   crc32.ChecksumIEEE(content[headerSize:]),
-		flags: content[4],
-		data:  content[headerSize:],
+		size:  size,
+		data:  make(map[string]string),
 	}
 
 	return env, nil
-
 }
 
 // Open opens a existing uboot env file
@@ -68,28 +64,40 @@ func Open(fname string) (*Env, error) {
 		return nil, err
 	}
 
-	env := &Env{
-		fname: fname,
-		crc:   readUint32(content),
-		flags: content[4],
-		data:  content[headerSize:],
+	crc := readUint32(content)
+	actualCRC := crc32.ChecksumIEEE(content[headerSize:])
+	if crc != actualCRC {
+		return nil, fmt.Errorf("bad CRC: %v != %v", crc, actualCRC)
 	}
 
-	actualCRC := crc32.ChecksumIEEE(content[headerSize:])
-	if env.crc != actualCRC {
-		return nil, fmt.Errorf("bad CRC: %v != %v", env.crc, actualCRC)
+	env := &Env{
+		fname: fname,
+		size:  len(content),
+		data:  parseData(content[headerSize:]),
 	}
 
 	return env, nil
 }
 
-func (env *Env) String() string {
-	out := ""
-	for _, envStr := range bytes.Split(env.data, []byte{0}) {
+func parseData(data []byte) map[string]string {
+	out := make(map[string]string)
+
+	for _, envStr := range bytes.Split(data, []byte{0}) {
 		if len(envStr) == 0 || envStr[0] == 0 || envStr[0] == 255 {
 			continue
 		}
-		out += string(envStr) + "\n"
+		l := strings.SplitN(string(envStr), "=", 2)
+		out[l[0]] = l[1]
+	}
+
+	return out
+}
+
+func (env *Env) String() string {
+	out := ""
+
+	for k, v := range env.data {
+		out += fmt.Sprintf("%s=%s\n", k, v)
 	}
 
 	return out
@@ -97,57 +105,25 @@ func (env *Env) String() string {
 
 // Get returns the value of the environment variable of the given name
 func (env *Env) Get(name string) string {
-	for _, envStr := range bytes.Split(env.data, []byte{0}) {
-		if len(envStr) == 0 || envStr[0] == 0 || envStr[0] == 255 {
-			continue
-		}
-		s := string(envStr)
-		if strings.HasPrefix(s, fmt.Sprintf("%s=", name)) {
-			value := strings.SplitN(s, "=", 2)
-			return value[1]
-		}
-	}
-
-	return ""
+	return env.data[name]
 }
 
 // Set sets an environment name to the given value, if the value is empty
 // the variable will be removed from the environment
-func (env *Env) Set(name, value string) error {
-	envStrs := []string{}
-
-	for _, envStr := range bytes.Split(env.data, []byte{0}) {
-		if len(envStr) == 0 || envStr[0] == 0 || envStr[0] == 255 {
-			continue
-		}
-		// remove str we want to rewrite
-		if strings.HasPrefix(string(envStr), fmt.Sprintf("%s=", name)) {
-			continue
-		}
-		envStrs = append(envStrs, string(envStr))
-	}
-
-	// append new str
-	if value != "" {
-		envStrs = append(envStrs, fmt.Sprintf("%s=%s", name, value))
-	}
-
-	w := bytes.NewBuffer(nil)
-	for _, envStr := range envStrs {
-		//println(envStr)
-		fmt.Fprintf(w, "%s", envStr)
-		w.Write([]byte{0})
-	}
-	pad := make([]byte, len(env.data)-w.Len())
-	w.Write(pad)
-	env.data = w.Bytes()
-	env.crc = crc32.ChecksumIEEE(env.data)
-
-	return nil
+func (env *Env) Set(name, value string) {
+	env.data[name] = value
 }
 
 // Save will write out the environment data
 func (env *Env) Save() error {
+	w := bytes.NewBuffer(nil)
+	w.Grow(env.size)
+	for k, v := range env.data {
+		w.Write([]byte(fmt.Sprintf("%s=%s", k, v)))
+		w.Write([]byte{0})
+	}
+	crc := crc32.ChecksumIEEE(w.Bytes())
+
 	// the size of the env file never changes so we not truncate
 	// we also do not O_TRUNC to avoid reallocations on the FS
 	// to minimize risk of fs corruption
@@ -157,9 +133,11 @@ func (env *Env) Save() error {
 	}
 	defer f.Close()
 
-	f.Write(writeUint32(env.crc))
-	f.Write([]byte{env.flags})
-	f.Write(env.data)
+	f.Write(writeUint32(crc))
+	// padding bytes (e.g. for redundant header)
+	pad := make([]byte, headerSize-binary.Size(crc))
+	f.Write(pad)
+	f.Write(w.Bytes())
 
 	return nil
 }

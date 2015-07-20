@@ -41,9 +41,7 @@ func main() {
 		}
 		name := os.Args[3]
 		value := os.Args[4]
-		if err := env.Set(name, value); err != nil {
-			log.Fatalf("env.Set failed: %s", err)
-		}
+		env.Set(name, value)
 		if err := env.Save(); err != nil {
 			log.Fatalf("env.Save failed for %s: %s", envFile, err)
 		}
