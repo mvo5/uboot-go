@@ -1,4 +1,4 @@
-package uboot
+package uenv
 
 import (
 	"bytes"
@@ -35,8 +35,8 @@ func writeUint32(u uint32) []byte {
 	return buf.Bytes()
 }
 
-// CreateEnv a new empty uboot env file with the given size
-func CreateEnv(fname string, size int) (*Env, error) {
+// Create a new empty uboot env file with the given size
+func Create(fname string, size int) (*Env, error) {
 	f, err := os.Create(fname)
 	if err != nil {
 		return nil, err
@@ -55,8 +55,8 @@ func CreateEnv(fname string, size int) (*Env, error) {
 
 }
 
-// OpenEnv opens a existing uboot env file
-func OpenEnv(fname string) (*Env, error) {
+// Open opens a existing uboot env file
+func Open(fname string) (*Env, error) {
 	f, err := os.Open(fname)
 	if err != nil {
 		return nil, err
@@ -95,6 +95,7 @@ func (env *Env) String() string {
 	return out
 }
 
+// Get returns the value of the environment variable of the given name
 func (env *Env) Get(name string) string {
 	for _, envStr := range bytes.Split(env.data, []byte{0}) {
 		if len(envStr) == 0 || envStr[0] == 0 || envStr[0] == 255 {
@@ -110,7 +111,7 @@ func (env *Env) Get(name string) string {
 	return ""
 }
 
-// Set sets a environment name to the given value, if the value is empty
+// Set sets an environment name to the given value, if the value is empty
 // the variable will be removed from the environment
 func (env *Env) Set(name, value string) error {
 	envStrs := []string{}

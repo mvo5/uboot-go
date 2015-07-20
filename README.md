@@ -10,12 +10,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/mvo5/uboot-env/uboot"
+	"github.com/mvo5/uboot-env/uenv"
 	"os"
 )
 
 func main() {
-	env, _ := uboot.OpenEnv(os.Args[1])
+	env, _ := uenv.Open(os.Args[1])
 	fmt.Print(env)
 	env.Set("foo", "bar")
 	fmt.Print(env)

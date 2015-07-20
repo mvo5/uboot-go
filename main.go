@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/mvo5/uboot-go/uboot"
+	"github.com/mvo5/uboot-go/uenv"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 
 	switch cmd {
 	case "print":
-		env, err := uboot.OpenEnv(envFile)
+		env, err := uenv.Open(envFile)
 		if err != nil {
 			log.Fatalf("readUbootEnv failed for %s: %s", envFile, err)
 		}
@@ -26,7 +26,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Atoi failed for %s: %s", envFile, err)
 		}
-		env, err := uboot.CreateEnv(envFile, size)
+		env, err := uenv.Create(envFile, size)
 		if err != nil {
 			log.Fatalf("env.Create failed for %s: %s", envFile, err)
 		}
@@ -35,7 +35,7 @@ func main() {
 		}
 
 	case "set":
-		env, err := uboot.OpenEnv(envFile)
+		env, err := uenv.Open(envFile)
 		if err != nil {
 			log.Fatalf("readUbootEnv failed for %s: %s", envFile, err)
 		}
