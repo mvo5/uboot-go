@@ -95,6 +95,21 @@ func (env *Env) String() string {
 	return out
 }
 
+func (env *Env) Get(name string) string {
+	for _, envStr := range bytes.Split(env.data, []byte{0}) {
+		if len(envStr) == 0 || envStr[0] == 0 || envStr[0] == 255 {
+			continue
+		}
+		s := string(envStr)
+		if strings.HasPrefix(s, fmt.Sprintf("%s=", name)) {
+			value := strings.SplitN(s, "=", 2)
+			return value[1]
+		}
+	}
+
+	return ""
+}
+
 // Set sets a environment name to the given value, if the value is empty
 // the variable will be removed from the environment
 func (env *Env) Set(name, value string) error {
