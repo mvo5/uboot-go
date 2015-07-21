@@ -1,3 +1,9 @@
+golang-uboot-go (0~1.git85b3e190-0ubuntu2) wily; urgency=medium
+
+  * update to golang-check.v1-dev dependency
+
+ -- Michael Vogt <michael.vogt@ubuntu.com>  Tue, 21 Jul 2015 21:18:52 +0200
+
 golang-uboot-go (0~1.git85b3e190-0ubuntu1) wily; urgency=low
 
   * Initial release.
