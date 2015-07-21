@@ -9,11 +9,11 @@ else
 fi
 
 echo Checking formatting
-fmt=$(gofmt -l .)
+fmt="$(gofmt -l .)"
 
 if [ -n "$fmt" ]; then
     echo "Formatting wrong in following files"
-    echo $fmt
+    echo "$fmt"
     exit 1
 fi
 
@@ -40,9 +40,9 @@ go vet ./...
 
 # golint
 echo Running lint
-lint=$(golint ./...)
+lint="$(golint ./...)"
 if [ -n "$lint" ]; then
     echo "Lint complains:"
-    echo $lint
+    echo "$lint"
     exit 1
 fi

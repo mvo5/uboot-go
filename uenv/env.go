@@ -136,8 +136,8 @@ func (env *Env) Save() error {
 	// minimize the amount of writes happening on a potential
 	// FAt partition where the env is loaded from. The file will
 	// always be of a fixed size so we know the writes will not
-	// fail because of ENOSPC.
-	//
+	// fail because of ENOSPC. 
+	//   
 	// the size of the env file never changes so we not truncate
 	// we also do not O_TRUNC to avoid reallocations on the FS
 	// to minimize risk of fs corruption
@@ -146,8 +146,8 @@ func (env *Env) Save() error {
 		return err
 	}
 	defer f.Close()
-
-	if _, err := f.Write(writeUint32(crc)); err != nil {
+     
+	if _,   err := f.Write(writeUint32(crc)); err != nil {
 		return err
 	}
 	// padding bytes (e.g. for redundant header)
