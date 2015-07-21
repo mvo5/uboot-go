@@ -132,15 +132,17 @@ func (env *Env) Save() error {
 	crc := crc32.ChecksumIEEE(w.Bytes())
 
 	// Note that we overwrite the existing file and do not do
-	// the usual write-rename. The rational is that we want to
+	// the usual write-rename. The rationale is that we want to
 	// minimize the amount of writes happening on a potential
-	// FAt partition where the env is loaded from. The file will
+	// FAT partition where the env is loaded from. The file will
 	// always be of a fixed size so we know the writes will not
 	// fail because of ENOSPC. 
 	//   
-	// the size of the env file never changes so we not truncate
-	// we also do not O_TRUNC to avoid reallocations on the FS
-	// to minimize risk of fs corruption
+	// The size of the env file never changes so we do not
+	// truncate it.
+	//
+	// We also do not O_TRUNC to avoid reallocations on the FS
+	// to minimize risk of fs corruption.
 	f, err := os.OpenFile(env.fname, os.O_WRONLY, 0666)
 	if err != nil {
 		return err
