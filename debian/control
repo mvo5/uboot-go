@@ -1,0 +1,18 @@
+Source: golang-uboot-go
+Section: devel
+Priority: extra
+Maintainer: Michael Vogt <mvo@ubuntu.com>
+Build-Depends:
+ debhelper (>= 9),
+ dh-golang,
+ golang-go,
+ golang-gocheck-dev,
+Standards-Version: 3.9.6
+Homepage: http://github.com/mvo5/uboot-go
+Vcs-Browser: http://github.com/mvo5/uboot-go
+
+Package: golang-uboot-go-dev
+Architecture: all
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Read/write uboot environment
+ Go package to read/write uboot env files.

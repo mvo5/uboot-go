@@ -1,0 +1,5 @@
+golang-uboot-go (0~1.git85b3e190-0ubuntu1) wily; urgency=low
+
+  * Initial release.
+
+ -- Michael Vogt <michael.vogt@ubuntu.com>  Tue, 21 Jul 2015 20:46:25 +0200

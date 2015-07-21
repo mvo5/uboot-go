@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+#export DH_VERBOSE=1
+export DH_OPTIONS
+
+export DH_GOPKG := github.com/mvo5/uboot-go
+
+%:
+	dh $@ --buildsystem=golang --with=golang --builddirectory=$(BUILDDIR)
+
+override_dh_auto_install:
+	dh_auto_install
+	# do not install the no uboot-go binary for now
+	rm debian/golang-uboot-go-dev/usr/bin/uboot-go
