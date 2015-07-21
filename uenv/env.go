@@ -106,12 +106,12 @@ func (env *Env) String() string {
 	return out
 }
 
-// Get returns the value of the environment variable of the given name
+// Get the value of the environment variable
 func (env *Env) Get(name string) string {
 	return env.data[name]
 }
 
-// Set sets an environment name to the given value, if the value is empty
+// Set an environment name to the given value, if the value is empty
 // the variable will be removed from the environment
 func (env *Env) Set(name, value string) {
 	env.data[name] = value
@@ -120,6 +120,8 @@ func (env *Env) Set(name, value string) {
 // Save will write out the environment data
 func (env *Env) Save() error {
 	w := bytes.NewBuffer(nil)
+	// will panic if the buffer can't grow, all writes to
+	// the buffer will be ok because we sized it correctly
 	w.Grow(env.size - headerSize)
 	for k, v := range env.data {
 		w.Write([]byte(fmt.Sprintf("%s=%s", k, v)))
@@ -129,6 +131,13 @@ func (env *Env) Save() error {
 	w.Write(make([]byte, env.size-headerSize-w.Len()))
 	crc := crc32.ChecksumIEEE(w.Bytes())
 
+	// Note that we overwrite the existing file and do not do
+	// the usual write-rename. The rational is that we want to
+	// minimize the amount of writes happening on a potential
+	// FAt partition where the env is loaded from. The file will
+	// always be of a fixed size so we know the writes will not
+	// fail because of ENOSPC.
+	//
 	// the size of the env file never changes so we not truncate
 	// we also do not O_TRUNC to avoid reallocations on the FS
 	// to minimize risk of fs corruption
@@ -138,13 +147,19 @@ func (env *Env) Save() error {
 	}
 	defer f.Close()
 
-	f.Write(writeUint32(crc))
+	if _, err := f.Write(writeUint32(crc)); err != nil {
+		return err
+	}
 	// padding bytes (e.g. for redundant header)
 	pad := make([]byte, headerSize-binary.Size(crc))
-	f.Write(pad)
-	f.Write(w.Bytes())
+	if _, err := f.Write(pad); err != nil {
+		return err
+	}
+	if _, err := f.Write(w.Bytes()); err != nil {
+		return err
+	}
 
-	return nil
+	return f.Sync()
 }
 
 // Import is a helper that imports a given text file that contains
@@ -164,9 +179,6 @@ func (env *Env) Import(r io.Reader) error {
 		env.data[l[0]] = l[1]
 
 	}
-	if err := scanner.Err(); err != nil {
-		return err
-	}
 
-	return nil
+	return scanner.Err()
 }
