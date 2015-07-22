@@ -17,11 +17,17 @@ import (
 //        he/she wants env with or without flags
 var headerSize = 5
 
+type valueAndPos struct {
+	pos   int
+	value string
+}
+
 // Env contains the data of the uboot environment
 type Env struct {
 	fname string
 	size  int
-	data  map[string]string
+	data  map[string]valueAndPos
+	posC  int
 }
 
 // little endian helpers
@@ -49,7 +55,7 @@ func Create(fname string, size int) (*Env, error) {
 	env := &Env{
 		fname: fname,
 		size:  size,
-		data:  make(map[string]string),
+		data:  make(map[string]valueAndPos),
 	}
 
 	return env, nil
@@ -83,17 +89,17 @@ func Open(fname string) (*Env, error) {
 	return env, nil
 }
 
-func parseData(data []byte) map[string]string {
-	out := make(map[string]string)
+func parseData(data []byte) map[string]valueAndPos {
+	out := make(map[string]valueAndPos)
 
-	for _, envStr := range bytes.Split(data, []byte{0}) {
+	for i, envStr := range bytes.Split(data, []byte{0}) {
 		if len(envStr) == 0 || envStr[0] == 0 || envStr[0] == 255 {
 			continue
 		}
 		l := strings.SplitN(string(envStr), "=", 2)
 		key := l[0]
 		value := l[1]
-		out[key] = value
+		out[key] = valueAndPos{value: value, pos: i}
 	}
 
 	return out
@@ -111,7 +117,7 @@ func (env *Env) String() string {
 
 // Get the value of the environment variable
 func (env *Env) Get(name string) string {
-	return env.data[name]
+	return env.data[name].value
 }
 
 // Set an environment name to the given value, if the value is empty
@@ -121,21 +127,13 @@ func (env *Env) Set(name, value string) {
 		delete(env.data, name)
 		return
 	}
-	env.data[name] = value
-}
-
-// iterEnv calls the passed function f with key, value for environment
-// vars. The order is guaranteed (unlike just iterating over the map)
-func (env *Env) iterEnv(f func(key, value string)) {
-	keys := make([]string, 0, len(env.data))
-	for k := range env.data {
-		keys = append(keys, k)
+	var pos int
+	if cur, ok := env.data[name]; ok {
+		pos = cur.pos
+	} else {
+		pos = len(env.data)
 	}
-	sort.Strings(keys)
-
-	for _, k := range keys {
-		f(k, env.data[k])
-	}
+	env.data[name] = valueAndPos{value: value, pos: pos}
 }
 
 // Save will write out the environment data
@@ -192,6 +190,7 @@ func (env *Env) Save() error {
 // ignored (like the input file on mkenvimage)
 func (env *Env) Import(r io.Reader) error {
 	scanner := bufio.NewScanner(r)
+	pos := 0
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "#") || len(line) == 0 {
@@ -201,9 +200,37 @@ func (env *Env) Import(r io.Reader) error {
 		if len(l) == 1 {
 			return fmt.Errorf("Invalid line: %q", line)
 		}
-		env.data[l[0]] = l[1]
-
+		env.data[l[0]] = valueAndPos{value: l[1], pos: pos}
+		pos++
 	}
 
 	return scanner.Err()
+}
+
+// order stuff
+type keyValuePos struct {
+	key string
+	valueAndPos
+}
+type byPos []keyValuePos
+
+func (a byPos) Len() int           { return len(a) }
+func (a byPos) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byPos) Less(i, j int) bool { return a[i].pos < a[j].pos }
+
+// iterEnv calls the passed function f with key, value for environment
+// vars. The order is guaranteed (unlike just iterating over the map)
+func (env *Env) iterEnv(f func(key, value string)) {
+	keys := make([]keyValuePos, 0, len(env.data))
+	for k, v := range env.data {
+		keys = append(keys, keyValuePos{
+			key:         k,
+			valueAndPos: v,
+		})
+	}
+	sort.Sort(byPos(keys))
+
+	for _, k := range keys {
+		f(k.key, k.value)
+	}
 }

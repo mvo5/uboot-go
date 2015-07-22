@@ -61,8 +61,8 @@ func (u *uenvTestSuite) TestImport(c *C) {
 	r := strings.NewReader("foo=bar\n#comment\n\nbaz=baz")
 	err = env.Import(r)
 	c.Assert(err, IsNil)
-	// order is alphabetic
-	c.Assert(env.String(), Equals, "baz=baz\nfoo=bar\n")
+	// order is input order
+	c.Assert(env.String(), Equals, "foo=bar\nbaz=baz\n")
 }
 
 func (u *uenvTestSuite) TestImportHasError(c *C) {
@@ -82,4 +82,39 @@ func (u *uenvTestSuite) TestSetEmptyUnsets(c *C) {
 	c.Assert(env.String(), Equals, "foo=bar\n")
 	env.Set("foo", "")
 	c.Assert(env.String(), Equals, "")
+}
+
+func (u *uenvTestSuite) TestSetOrder(c *C) {
+	env, err := Create(u.envFile, 4096)
+	c.Assert(err, IsNil)
+
+	// set in order
+	env.Set("foo", "bar")
+	env.Set("baz", "baz")
+	env.Set("hrm", "hrm")
+	// original order of baz is kept
+	env.Set("baz", "baz")
+
+	// order is set order
+	c.Assert(env.String(), Equals, "foo=bar\nbaz=baz\nhrm=hrm\n")
+}
+
+func (u *uenvTestSuite) TestSetOrderPathological(c *C) {
+	env, err := Create(u.envFile, 4096)
+	c.Assert(err, IsNil)
+
+	// set in order
+	env.Set("delme", "delme")
+	env.Set("delme2", "delme2")
+	env.Set("first", "first")
+
+	// now delete some keys
+	env.Set("delme", "")
+	env.Set("delme2", "")
+
+	// add a new one
+	env.Set("second", "second")
+
+	// ensure order is kept
+	c.Assert(env.String(), Equals, "first=first\nsecond=second\n")
 }
