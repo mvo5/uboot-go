@@ -114,6 +114,10 @@ func (env *Env) Get(name string) string {
 // Set an environment name to the given value, if the value is empty
 // the variable will be removed from the environment
 func (env *Env) Set(name, value string) {
+	if value == "" {
+		delete(env.data, name)
+		return
+	}
 	env.data[name] = value
 }
 
@@ -136,8 +140,8 @@ func (env *Env) Save() error {
 	// minimize the amount of writes happening on a potential
 	// FAT partition where the env is loaded from. The file will
 	// always be of a fixed size so we know the writes will not
-	// fail because of ENOSPC. 
-	//   
+	// fail because of ENOSPC.
+	//
 	// The size of the env file never changes so we do not
 	// truncate it.
 	//
@@ -148,8 +152,8 @@ func (env *Env) Save() error {
 		return err
 	}
 	defer f.Close()
-     
-	if _,   err := f.Write(writeUint32(crc)); err != nil {
+
+	if _, err := f.Write(writeUint32(crc)); err != nil {
 		return err
 	}
 	// padding bytes (e.g. for redundant header)
