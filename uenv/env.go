@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -101,9 +102,9 @@ func parseData(data []byte) map[string]string {
 func (env *Env) String() string {
 	out := ""
 
-	for k, v := range env.data {
-		out += fmt.Sprintf("%s=%s\n", k, v)
-	}
+	env.iterEnv(func(key, value string) {
+		out += fmt.Sprintf("%s=%s\n", key, value)
+	})
 
 	return out
 }
@@ -123,16 +124,32 @@ func (env *Env) Set(name, value string) {
 	env.data[name] = value
 }
 
+// iterEnv calls the passed function f with key, value for environment
+// vars. The order is guaranteed (unlike just iterating over the map)
+func (env *Env) iterEnv(f func(key, value string)) {
+	keys := make([]string, 0, len(env.data))
+	for k := range env.data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		f(k, env.data[k])
+	}
+}
+
 // Save will write out the environment data
 func (env *Env) Save() error {
 	w := bytes.NewBuffer(nil)
 	// will panic if the buffer can't grow, all writes to
 	// the buffer will be ok because we sized it correctly
 	w.Grow(env.size - headerSize)
-	for k, v := range env.data {
-		w.Write([]byte(fmt.Sprintf("%s=%s", k, v)))
+
+	env.iterEnv(func(key, value string) {
+		w.Write([]byte(fmt.Sprintf("%s=%s", key, value)))
 		w.Write([]byte{0})
-	}
+	})
+
 	// ensure buffer is exactly the size we need it to be
 	w.Write(make([]byte, env.size-headerSize-w.Len()))
 	crc := crc32.ChecksumIEEE(w.Bytes())
