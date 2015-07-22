@@ -61,7 +61,8 @@ func (u *uenvTestSuite) TestImport(c *C) {
 	r := strings.NewReader("foo=bar\n#comment\n\nbaz=baz")
 	err = env.Import(r)
 	c.Assert(err, IsNil)
-	c.Assert(env.String(), Equals, "foo=bar\nbaz=baz\n")
+	// order is alphabetic
+	c.Assert(env.String(), Equals, "baz=baz\nfoo=bar\n")
 }
 
 func (u *uenvTestSuite) TestImportHasError(c *C) {
