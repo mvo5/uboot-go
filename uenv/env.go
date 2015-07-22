@@ -90,7 +90,9 @@ func parseData(data []byte) map[string]string {
 			continue
 		}
 		l := strings.SplitN(string(envStr), "=", 2)
-		out[l[0]] = l[1]
+		key := l[0]
+		value := l[1]
+		out[key] = value
 	}
 
 	return out
