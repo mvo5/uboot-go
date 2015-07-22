@@ -1,6 +1,6 @@
 package uenv
 
-  import (
+import (
 	"path/filepath"
 	"strings"
 	"testing"
@@ -71,4 +71,14 @@ func (u *uenvTestSuite) TestImportHasError(c *C) {
 	r := strings.NewReader("foxy")
 	err = env.Import(r)
 	c.Assert(err, ErrorMatches, "Invalid line: \"foxy\"")
+}
+
+func (u *uenvTestSuite) TestSetEmptyUnsets(c *C) {
+	env, err := Create(u.envFile, 4096)
+	c.Assert(err, IsNil)
+
+	env.Set("foo", "bar")
+	c.Assert(env.String(), Equals, "foo=bar\n")
+	env.Set("foo", "")
+	c.Assert(env.String(), Equals, "")
 }
