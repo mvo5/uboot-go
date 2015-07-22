@@ -1,7 +1,9 @@
-golang-uboot-go (0~2.git3a246a1-0ubuntu1) UNRELEASED; urgency=medium
+golang-uboot-go (0~2.git361f6eb-0ubuntu1) wily; urgency=medium
 
   * new snapshot:
-    - fix unset of vars
+    - fix unset of vars and add test
+    - ensure stable iteration order for String() and Save()
+      (alphabetic for now)
 
  -- Michael Vogt <michael.vogt@ubuntu.com>  Wed, 22 Jul 2015 08:12:29 +0200
 
