@@ -1,3 +1,9 @@
+golang-uboot-go (0~3.git69978a3-0ubuntu1) wily; urgency=medium
+
+  * fix incorrect handling of \0\0 (eof)
+
+ -- Michael Vogt <michael.vogt@ubuntu.com>  Thu, 23 Jul 2015 10:17:38 +0200
+
 golang-uboot-go (0~2.git361f6eb-0ubuntu1) wily; urgency=medium
 
   * new snapshot:
