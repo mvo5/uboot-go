@@ -63,21 +63,23 @@ func Open(fname string) (*Env, error) {
 	}
 	defer f.Close()
 
-	content, err := ioutil.ReadAll(f)
+	contentWithHeader, err := ioutil.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
+	crc := readUint32(contentWithHeader)
 
-	crc := readUint32(content)
-	actualCRC := crc32.ChecksumIEEE(content[headerSize:])
+	payload := contentWithHeader[headerSize:]
+	actualCRC := crc32.ChecksumIEEE(payload)
 	if crc != actualCRC {
 		return nil, fmt.Errorf("bad CRC: %v != %v", crc, actualCRC)
 	}
+	eof := bytes.Index(payload, []byte{0, 0})
 
 	env := &Env{
 		fname: fname,
-		size:  len(content),
-		data:  parseData(content[headerSize:]),
+		size:  len(contentWithHeader),
+		data:  parseData(payload[:eof]),
 	}
 
 	return env, nil
@@ -91,6 +93,9 @@ func parseData(data []byte) map[string]string {
 			continue
 		}
 		l := strings.SplitN(string(envStr), "=", 2)
+		if len(l) == 1 {
+			panic(fmt.Sprintf("invalid line %q (corrupted file?)", envStr))
+		}
 		key := l[0]
 		value := l[1]
 		out[key] = value
@@ -117,6 +122,9 @@ func (env *Env) Get(name string) string {
 // Set an environment name to the given value, if the value is empty
 // the variable will be removed from the environment
 func (env *Env) Set(name, value string) {
+	if name == "" {
+		panic(fmt.Sprintf("Set() can not be called with empty key for value: %q", value))
+	}
 	if value == "" {
 		delete(env.data, name)
 		return
@@ -134,6 +142,10 @@ func (env *Env) iterEnv(f func(key, value string)) {
 	sort.Strings(keys)
 
 	for _, k := range keys {
+		if k == "" {
+			panic("iterEnv iterating over a empty key")
+		}
+
 		f(k, env.data[k])
 	}
 }
@@ -145,13 +157,27 @@ func (env *Env) Save() error {
 	// the buffer will be ok because we sized it correctly
 	w.Grow(env.size - headerSize)
 
+	// write the payload
 	env.iterEnv(func(key, value string) {
 		w.Write([]byte(fmt.Sprintf("%s=%s", key, value)))
 		w.Write([]byte{0})
 	})
 
-	// ensure buffer is exactly the size we need it to be
-	w.Write(make([]byte, env.size-headerSize-w.Len()))
+	// write double \0 to mark the end of the env
+	w.Write([]byte{0})
+
+	// no keys, so no previous \0 was written so we write one here
+	if len(env.data) == 0 {
+		w.Write([]byte{0})
+	}
+
+	// write ff into the remaining parts
+	writtenSoFar := w.Len()
+	for i := 0; i < env.size-headerSize-writtenSoFar; i++ {
+		w.Write([]byte{0xff})
+	}
+
+	// checksum
 	crc := crc32.ChecksumIEEE(w.Bytes())
 
 	// Note that we overwrite the existing file and do not do
