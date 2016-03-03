@@ -1,3 +1,11 @@
+golang-github-mvo5-uboot-go (0~3.git69978a3-0ubuntu4) xenial; urgency=medium
+
+  * rename source package to golang-github-mvo5-uboot-go
+    to follow http://pkg-go.alioth.debian.org/packaging.html
+    naming convention
+
+ -- Michael Vogt <michael.vogt@ubuntu.com>  Thu, 03 Mar 2016 10:15:26 +0100
+
 golang-uboot-go (0~3.git69978a3-0ubuntu3) xenial; urgency=medium
 
   * fix FTBFS

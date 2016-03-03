@@ -1,4 +1,4 @@
-Source: golang-uboot-go
+Source: golang-github-mvo5-uboot-go
 Section: devel
 Priority: extra
 Maintainer: Michael Vogt <mvo@ubuntu.com>
