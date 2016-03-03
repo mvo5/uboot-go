@@ -1,3 +1,17 @@
+golang-uboot-go (0~3.git69978a3-0ubuntu3) xenial; urgency=medium
+
+  * fix FTBFS
+
+ -- Michael Vogt <michael.vogt@ubuntu.com>  Thu, 25 Feb 2016 20:13:09 +0100
+
+golang-uboot-go (0~3.git69978a3-0ubuntu2) xenial; urgency=medium
+
+  * rename binary package to golang-github-mvo5-uboot-go-dev
+    to follow http://pkg-go.alioth.debian.org/packaging.html
+    naming convention
+
+ -- Michael Vogt <michael.vogt@ubuntu.com>  Thu, 25 Feb 2016 17:28:09 +0100
+
 golang-uboot-go (0~3.git69978a3-0ubuntu1) wily; urgency=medium
 
   * fix incorrect handling of \0\0 (eof)

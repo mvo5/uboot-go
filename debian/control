@@ -11,7 +11,7 @@ Standards-Version: 3.9.6
 Homepage: http://github.com/mvo5/uboot-go
 Vcs-Browser: http://github.com/mvo5/uboot-go
 
-Package: golang-uboot-go-dev
+Package: golang-github-mvo5-uboot-go-dev
 Architecture: all
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: Read/write uboot environment

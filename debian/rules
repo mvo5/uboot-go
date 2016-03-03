@@ -12,4 +12,4 @@ export DH_GOPKG := github.com/mvo5/uboot-go
 override_dh_auto_install:
 	dh_auto_install
 	# do not install the no uboot-go binary for now
-	rm debian/golang-uboot-go-dev/usr/bin/uboot-go
+	rm debian/golang-github-mvo5-uboot-go-dev/usr/bin/uboot-go
