@@ -14,5 +14,7 @@ Vcs-Browser: http://github.com/mvo5/uboot-go
 Package: golang-github-mvo5-uboot-go-dev
 Architecture: all
 Depends: ${misc:Depends}, ${shlibs:Depends}
+Replaces: golang-uboot-go-dev (<< 0~3.git69978a3-0ubuntu4~)
+Breaks: golang-uboot-go-dev (<< 0~3.git69978a3-0ubuntu4~)
 Description: Read/write uboot environment
  Go package to read/write uboot env files.

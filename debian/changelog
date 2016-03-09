@@ -1,3 +1,10 @@
+golang-github-mvo5-uboot-go (0~3.git69978a3-0ubuntu5) xenial; urgency=medium
+
+  * add missing breaks/replaces to provide clean upgrade from the
+    previous binary name "golang-uboot-go-dev"
+
+ -- Michael Vogt <michael.vogt@ubuntu.com>  Wed, 09 Mar 2016 09:12:00 +0100
+
 golang-github-mvo5-uboot-go (0~3.git69978a3-0ubuntu4) xenial; urgency=medium
 
   * rename source package to golang-github-mvo5-uboot-go
