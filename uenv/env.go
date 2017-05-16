@@ -76,16 +76,21 @@ func Open(fname string) (*Env, error) {
 	}
 	eof := bytes.Index(payload, []byte{0, 0})
 
+	data, err := parseData(payload[:eof])
+	if err != nil {
+		return nil, err
+	}
+
 	env := &Env{
 		fname: fname,
 		size:  len(contentWithHeader),
-		data:  parseData(payload[:eof]),
+		data:  data,
 	}
 
 	return env, nil
 }
 
-func parseData(data []byte) map[string]string {
+func parseData(data []byte) (map[string]string, error) {
 	out := make(map[string]string)
 
 	for _, envStr := range bytes.Split(data, []byte{0}) {
@@ -93,15 +98,15 @@ func parseData(data []byte) map[string]string {
 			continue
 		}
 		l := strings.SplitN(string(envStr), "=", 2)
-		if len(l) == 1 {
-			panic(fmt.Sprintf("invalid line %q (corrupted file?)", envStr))
+		if len(l) != 2 {
+			return nil, fmt.Errorf("cannot parse line %q as key=value pair", envStr)
 		}
 		key := l[0]
 		value := l[1]
 		out[key] = value
 	}
 
-	return out
+	return out, nil
 }
 
 func (env *Env) String() string {

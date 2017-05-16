@@ -123,6 +123,21 @@ func (u *uenvTestSuite) TestReadStopsAfterDoubleNull(c *C) {
 	c.Assert(env.String(), Equals, "foo=bar\n")
 }
 
+// ensure that the malformed data is not causing us to panic.
+func (u *uenvTestSuite) TestErrorOnMalformedData(c *C) {
+	mockData := []byte{
+		// foo
+		0x66, 0x6f, 0x6f,
+		// eof
+		0x00, 0x00,
+	}
+	u.makeUbootEnvFromData(c, mockData)
+
+	env, err := Open(u.envFile)
+	c.Assert(err, ErrorMatches, `cannot parse line "foo" as key=value pair`)
+	c.Assert(env, IsNil)
+}
+
 func (u *uenvTestSuite) TestReadEmptyFile(c *C) {
 	mockData := []byte{
 		// eof
