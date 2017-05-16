@@ -55,8 +55,21 @@ func Create(fname string, size int) (*Env, error) {
 	return env, nil
 }
 
+// OpenFlags instructs open how to alter its behavior.
+type OpenFlags int
+
+const (
+	// OpenBestEffort instructs OpenWithFlags to skip malformed data without returning an error.
+	OpenBestEffort OpenFlags = 1 << iota
+)
+
 // Open opens a existing uboot env file
 func Open(fname string) (*Env, error) {
+	return OpenWithFlags(fname, OpenFlags(0))
+}
+
+// OpenWithFlags opens a existing uboot env file, passing additional flags.
+func OpenWithFlags(fname string, flags OpenFlags) (*Env, error) {
 	f, err := os.Open(fname)
 	if err != nil {
 		return nil, err
@@ -76,7 +89,7 @@ func Open(fname string) (*Env, error) {
 	}
 	eof := bytes.Index(payload, []byte{0, 0})
 
-	data, err := parseData(payload[:eof])
+	data, err := parseData(payload[:eof], flags)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +103,7 @@ func Open(fname string) (*Env, error) {
 	return env, nil
 }
 
-func parseData(data []byte) (map[string]string, error) {
+func parseData(data []byte, flags OpenFlags) (map[string]string, error) {
 	out := make(map[string]string)
 
 	for _, envStr := range bytes.Split(data, []byte{0}) {
@@ -99,6 +112,9 @@ func parseData(data []byte) (map[string]string, error) {
 		}
 		l := strings.SplitN(string(envStr), "=", 2)
 		if len(l) != 2 {
+			if flags&OpenBestEffort == OpenBestEffort {
+				continue
+			}
 			return nil, fmt.Errorf("cannot parse line %q as key=value pair", envStr)
 		}
 		key := l[0]

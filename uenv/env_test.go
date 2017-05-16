@@ -138,6 +138,25 @@ func (u *uenvTestSuite) TestErrorOnMalformedData(c *C) {
 	c.Assert(env, IsNil)
 }
 
+// ensure that the malformed data is not causing us to panic.
+func (u *uenvTestSuite) TestOpenBestEffort(c *C) {
+	mockData := []byte{
+		// key1=value1
+		0x6b, 0x65, 0x79, 0x31, 0x3d, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x31, 0x00,
+		// foo
+		0x66, 0x6f, 0x6f, 0x00,
+		// key2=value2
+		0x6b, 0x65, 0x79, 0x32, 0x3d, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x32, 0x00,
+		// eof
+		0x00, 0x00,
+	}
+	u.makeUbootEnvFromData(c, mockData)
+
+	env, err := OpenWithFlags(u.envFile, OpenBestEffort)
+	c.Assert(err, IsNil)
+	c.Assert(env.String(), Equals, "key1=value1\nkey2=value2\n")
+}
+
 func (u *uenvTestSuite) TestReadEmptyFile(c *C) {
 	mockData := []byte{
 		// eof
